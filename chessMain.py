@@ -25,17 +25,51 @@ def main():
     screen.fill(p.Color("white"))
     # call for game state
     gs = chessEngine.GameState()
+    validMoves = gs.getVaildMoves()
+    moveMade = False #flag virbal for when the move is made 
     loadimages()
     run = True
+    sqSelected = () # keep track pf the last click of the user
+    plyerclicks = [] # keep track of the last move
     while run:
         for e in p.event.get():
             if e.type == p.QUIT:
                 run = False
+            #mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos()#(x,y)
-                cool = location[0]//SQ_SIZE
+                col = location[0]//SQ_SIZE
                 row = location[1]//SQ_SIZE
-                
+                if sqSelected == (row, col):
+                    sqSelected = () 
+                    plyerclicks = []
+                else:
+                    sqSelected = (row,col)
+                    plyerclicks.append(sqSelected)
+                if len(plyerclicks) == 2 :
+                    move = chessEngine.Move(plyerclicks[0],plyerclicks[1], gs.board)
+                    
+                    if not validMoves == None and move in validMoves:
+                        print(move.getChessNotiaon())
+                        print(len(validMoves))
+                        print(gs.inCheck)
+                        gs.Makemove(move)
+                        moveMade = True
+                        sqSelected = () 
+                        plyerclicks = []
+                    else:
+                        plyerclicks = [sqSelected]
+
+                    
+
+            #key hendler
+            elif  e.type == p.KEYDOWN:
+                if e.key == p.K_q:#undo move for "q"
+                    gs.undoMove()
+                    moveMade = True
+        if moveMade:
+            validMoves = gs.getAllPossibleMoves()
+            moveMade = False
         drawGameState(screen, gs)
         clock.tick(MAX_FPS)
         p.display.flip()
